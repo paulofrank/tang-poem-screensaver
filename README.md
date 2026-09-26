@@ -10,6 +10,28 @@ Each of the 35 poems fades in, stays on the screen for five minutes, and then fa
 
 The screensaver closes as soon as you press a key or switch to another window.
 
+## Install on Omarchy
+
+Open a terminal and run:
+
+```bash
+git clone https://github.com/paulofrank/tang-poem-screensaver.git
+cd tang-poem-screensaver
+bash install.sh
+```
+
+The installer asks for your password once, to install the font. To update to a newer version later, just run it again.
+
+To see the screensaver right away, run:
+
+```bash
+bash -lc 'omarchy-launch-screensaver force'
+```
+
+After that, it starts on its own whenever Omarchy's screensaver normally would.
+
+## Screenshots
+
 | | |
 |---|---|
 | ![Quiet Night Thought](screenshots/jing-ye-si.png) | ![Climbing Stork Tower](screenshots/deng-guan-que-lou.png) |
@@ -39,26 +61,6 @@ The screensaver closes as soon as you press a key or switch to another window.
 ## Preview in a browser
 
 To see what it looks like before installing, double-click `tang-poems.html`. Click once for full screen, and press Esc to leave.
-
-## Install on Omarchy
-
-Open a terminal and run:
-
-```bash
-git clone https://github.com/paulofrank/tang-poem-screensaver.git
-cd tang-poem-screensaver
-bash install.sh
-```
-
-The installer asks for your password once, to install the font. To update to a newer version later, just run it again.
-
-To see the screensaver right away, run:
-
-```bash
-bash -lc 'omarchy-launch-screensaver force'
-```
-
-After that, it starts on its own whenever Omarchy's screensaver normally would.
 
 ## Customizing
 
