@@ -98,10 +98,10 @@ bash ~/.config/omarchy/screensaver/tang-screensaver-uninstall
 
 To remove the font as well, run `omarchy pkg drop ttf-arphic-ukai`.
 
-## Known limits
+## Limitations
 
-- I've tested it on two Omarchy computers, both with Omarchy's default terminal. I haven't tested it with other terminals.
-- The font size suits a large monitor. On a smaller screen, you may want to make it smaller (see Customizing). If a poem is too tall for the screen, it continues in an extra column.
+- I've tested it on two Omarchy computers, both using foot, the terminal Omarchy comes with. I haven't tested it with other terminals, such as Alacritty, Ghostty or Kitty.
+- The font size is set for a large monitor. On a smaller screen, you may want to make it smaller (see Customizing). If a poem is too tall for the screen, it continues in an extra column.
 
 ## Credits and license
 
