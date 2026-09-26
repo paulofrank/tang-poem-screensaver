@@ -100,7 +100,7 @@ To remove the font as well, run `omarchy pkg drop ttf-arphic-ukai`.
 
 ## Limitations
 
-- I've tested it on two computers with Omarchy 4 (Quattro), both using foot, the terminal Omarchy 4 comes with. I haven't tested it with other terminals, such as Alacritty, Ghostty or Kitty.
+- I've tested it on two computers with Omarchy 4 (Quattro), both using foot, the default Omarchy 4 terminal. I haven't tested it with other terminals, such as Alacritty, Ghostty or Kitty.
 - The font size is set for a large monitor. On a smaller screen, you may want to make it smaller (see Customizing). If a poem is too tall for the screen, it continues in an extra column.
 
 ## Credits and license
