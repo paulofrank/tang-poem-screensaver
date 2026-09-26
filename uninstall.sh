@@ -1,6 +1,6 @@
 #!/bin/bash
 # Removes the Tang Poem Screensaver and restores Omarchy's own screensaver.
-# The AR PL UKai font is left installed; remove it with: omarchy pkg remove ttf-arphic-ukai
+# The AR PL UKai font is left installed; remove it with: omarchy pkg drop ttf-arphic-ukai
 set -euo pipefail
 
 dir="$HOME/.config/omarchy/screensaver"

@@ -6,7 +6,7 @@ A screensaver for [Omarchy](https://omarchy.org) that shows Chinese poems from t
 
 *A Night-mooring near Maple Bridge (楓橋夜泊) by Zhang Ji*
 
-Each of the 35 poems fades in, stays on the screen for five minutes, and then fades out before the next one appears. The poems are written in vertical columns, read from top to bottom and right to left, with the title and the poet's name first. The characters are in a brush-style kaishu (楷書) font, in traditional characters.
+Each of the 35 poems fades in, stays on the screen for five minutes, and then fades out before the next one appears. The poems are written in vertical columns, read from top to bottom and right to left, with the title and the poet's name first. The poems are set in a brush-style kaishu (楷書) font, using traditional characters.
 
 The screensaver closes as soon as you press a key or switch to another window.
 
@@ -23,7 +23,7 @@ The screensaver closes as soon as you press a key or switch to another window.
 - **Du Fu** (杜甫, 712–770): Quatrain (絕句); Gazing in Spring (春望); Enjoying Rain on a Spring Night (春夜喜雨); Climbing High (登高)
 - **Du Mu** (杜牧, 803–852): Qingming Festival (清明); Mountain Walk (山行); Mooring on the Qinhuai River (泊秦淮)
 - **He Zhizhang** (賀知章, c. 659–744): On Returning Home (回鄉偶書)
-- **Jia Dao** (賈島, 779–843): Seeking the Master but not Meeting (尋隱者不遇)
+- **Jia Dao** (賈島, 779–843): Seeking the Master but Not Meeting (尋隱者不遇)
 - **Li Bai** (李白, 701–762): Quiet Night Thought (靜夜思); Sitting Alone on Jingting Mountain (獨坐敬亭山); Leaving Baidi City at Dawn (早發白帝城); Seeing Meng Haoran Off to Guangling at Yellow Crane Tower (黃鶴樓送孟浩然之廣陵); Viewing the Waterfall at Mount Lu (望廬山瀑布)
 - **Li Shangyin** (李商隱, c. 813–c. 858): On the Leyou Plateau (登樂遊原); Night Rain, Sent North (夜雨寄北); The Brocade Zither (錦瑟)
 - **Li Shen** (李紳, 772–846): Pity the Farmers (憫農)
@@ -82,7 +82,7 @@ To add or remove poems, edit `tang-poems.txt`. Each poem takes up several lines:
 花落知多少
 ```
 
-To change how long each poem stays on the screen, change `HOLD_SECONDS = 300` (in seconds) at the top of `tang-screensaver`. To change the font size, change both `size=36` values in `foot.ini`.
+To change how long each poem stays on the screen, change `HOLD_SECONDS = 300` (in seconds) at the top of `tang-screensaver`. To change the font size, change both `size=36` values in `foot.ini`. This works whichever terminal Omarchy uses, not just foot.
 
 ## Uninstall
 
@@ -90,7 +90,13 @@ To change how long each poem stays on the screen, change `HOLD_SECONDS = 300` (i
 bash uninstall.sh
 ```
 
-This brings back Omarchy's own screensaver. To remove the font as well, run `omarchy pkg remove ttf-arphic-ukai`.
+This brings back Omarchy's own screensaver. If you've already deleted the downloaded folder, run this instead:
+
+```bash
+bash ~/.config/omarchy/screensaver/tang-screensaver-uninstall
+```
+
+To remove the font as well, run `omarchy pkg drop ttf-arphic-ukai`.
 
 ## Known limits
 
