@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+# A screensaver for Omarchy: one Tang poem at a time, written in columns
+# read top to bottom and right to left, fading in slowly,
+# resting still on the screen for five minutes, then fading out.
+# Exits on any key or when the window loses focus, like the stock one.
+import json, os, random, select, shutil, signal, subprocess, sys, termios, time, tty
+
+HOLD_SECONDS = 300
+FADE_SECONDS = 4
+FADE_STEPS = 40
+
+POEMS = os.path.expanduser("~/.config/omarchy/screensaver/tang-poems.txt")
+
+# Colors (red, green, blue): the paper, and the ink each line fades toward.
+# These are from the Flexoki Light theme.
+PAPER = (255, 252, 240)
+TITLE = (175, 48, 41)
+AUTHOR = (111, 110, 105)
+VERSE = (16, 15, 15)
+
+
+def load_poems():
+    with open(POEMS, encoding="utf-8") as f:
+        return [p.strip().splitlines() for p in f.read().split("\n%\n") if p.strip()]
+
+
+COLUMN_GAP = 2  # terminal cells between columns; each character is 2 cells wide
+
+
+def chunks(text, size):
+    return [text[i:i + size] for i in range(0, len(text), size)] or [""]
+
+
+def layout(poem, height):
+    """Classical layout: characters run top to bottom, columns right to left.
+    Returns columns in reading order as (text, color, first_row)."""
+    title, author, *lines = poem
+    tallest = max(len(l) for l in lines)
+    columns = [(part, TITLE, 0) for part in chunks(title, height)]
+    # The poet's name sits low in its own column, level with the verses' end.
+    columns += [(part, AUTHOR, max(0, tallest - len(part))) for part in chunks(author, height)]
+    columns.append(("", None, 0))
+    columns += [(part, VERSE, 0) for line in lines for part in chunks(line, height)]
+    return columns
+
+
+def draw(poem, level):
+    cols, height = shutil.get_terminal_size()
+    columns = layout(poem, height)
+    block_height = max(first + len(text) for text, _, first in columns)
+    block_width = len(columns) * (2 + COLUMN_GAP) - COLUMN_GAP
+    top = max(0, (height - block_height) // 2)
+    right = min(cols, (cols + block_width) // 2)
+    out = ["\033[?2026h"]  # synchronized update: the frame lands all at once
+    for i, (text, color, first) in enumerate(columns):
+        if not text:
+            continue
+        r, g, b = (round(p + (c - p) * level) for p, c in zip(PAPER, color))
+        x = right - 2 - i * (2 + COLUMN_GAP)
+        if x < 0:
+            break
+        out.append(f"\033[38;2;{r};{g};{b}m")
+        for j, char in enumerate(text):
+            out.append(f"\033[{top + first + j + 1};{x + 1}H{char}")
+    out.append("\033[?2026l")
+    sys.stdout.write("".join(out))
+    sys.stdout.flush()
+
+
+def in_focus():
+    try:
+        win = json.loads(subprocess.run(["hyprctl", "activewindow", "-j"],
+                                        capture_output=True, text=True, timeout=2).stdout)
+        return win.get("class") == "org.omarchy.screensaver"
+    except Exception:
+        return True
+
+
+def hypr_cursor(invisible):
+    value = "true" if invisible else "false"
+    if subprocess.run(["hyprctl", "eval", f"hl.config({{ cursor = {{ invisible = {value} }} }})"],
+                      capture_output=True).returncode != 0:
+        subprocess.run(["hyprctl", "keyword", "cursor:invisible", value], capture_output=True)
+
+
+def wait(seconds):
+    """Sleep, but return False as soon as a key is pressed or focus is lost."""
+    end = time.monotonic() + seconds
+    next_focus_check = 0
+    while (left := end - time.monotonic()) > 0:
+        if select.select([sys.stdin], [], [], min(left, 0.5))[0]:
+            return False
+        now = time.monotonic()
+        if now >= next_focus_check:
+            if not in_focus():
+                return False
+            next_focus_check = now + 1
+    return True
+
+
+def fade(poem, start, stop):
+    for step in range(FADE_STEPS + 1):
+        draw(poem, start + (stop - start) * step / FADE_STEPS)
+        if not wait(FADE_SECONDS / FADE_STEPS):
+            return False
+    return True
+
+
+def interrupt(*_):
+    raise KeyboardInterrupt
+
+
+def main():
+    for sig in (signal.SIGTERM, signal.SIGHUP, signal.SIGQUIT):
+        signal.signal(sig, interrupt)
+    poems = load_poems()
+    fd = sys.stdin.fileno()
+    saved = termios.tcgetattr(fd)
+    tty.setcbreak(fd)
+    sys.stdout.write("\033]11;rgb:%02x/%02x/%02x\007\033[?25l\033[2J" % PAPER)
+    sys.stdout.flush()
+
+    # Everything from hiding the mouse pointer on sits inside try, so the
+    # pointer comes back even if the screensaver is closed while starting up.
+    try:
+        hypr_cursor(True)
+
+        # The terminal starts at 80x24 and is resized once the window is mapped.
+        deadline = time.monotonic() + 2
+        while shutil.get_terminal_size() == (80, 24) and time.monotonic() < deadline:
+            time.sleep(0.02)
+
+        previous = None
+        while True:
+            poem = random.choice([p for p in poems if p != previous] or poems)
+            previous = poem
+            sys.stdout.write("\033[2J")
+            if not (fade(poem, 0, 1) and wait(HOLD_SECONDS) and fade(poem, 1, 0)):
+                break
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # A second close signal must not cut the cleanup short.
+        for sig in (signal.SIGTERM, signal.SIGHUP, signal.SIGQUIT, signal.SIGINT):
+            signal.signal(sig, signal.SIG_IGN)
+        hypr_cursor(False)
+        try:
+            termios.tcsetattr(fd, termios.TCSADRAIN, saved)
+        except termios.error:
+            pass  # the terminal has already closed
+        subprocess.run(["pkill", "-f", "[o]rg.omarchy.screensaver"])
+
+
+if __name__ == "__main__":
+    main()

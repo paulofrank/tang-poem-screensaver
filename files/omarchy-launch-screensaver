@@ -1,0 +1,30 @@
+#!/bin/bash
+# Tang Poem Screensaver: runs Omarchy's own screensaver launcher, but with the
+# poem screensaver, a large font, and a brush-style Chinese font. Everything
+# else (monitors, focus, terminal choice) is left to the packaged launcher.
+
+dir="$HOME/.config/omarchy/screensaver"
+stock="${OMARCHY_PATH:-/usr/share/omarchy}/bin/omarchy-launch-screensaver"
+
+# foot.ini is the one place to change the font and its size.
+font_line=$(grep -m1 '^font=' "$dir/foot.ini")
+size=$(grep -oP 'size=\K[0-9]+' <<<"$font_line" | head -1)
+cjk_font=$(sed -E 's/^font=[^,]*,([^:]*).*/\1/' <<<"$font_line")
+size=${size:-36}
+cjk_font=${cjk_font:-AR PL UKai TW}
+
+launcher=$(sed \
+  -e "s|\"\$OMARCHY_PATH/default/foot/screensaver.ini\"|\"$dir/foot.ini\"|" \
+  -e "s|--font-size=18|--font-size=$size \"--font-codepoint-map=U+2E80-U+9FFF,U+F900-U+FAFF=$cjk_font\"|" \
+  -e "s|--override font_size=18|--override font_size=$size --override \"symbol_map U+2E80-U+9FFF,U+F900-U+FAFF $cjk_font\"|" \
+  -e "s|/default/alacritty/screensaver.toml\"|/default/alacritty/screensaver.toml\" -o font.size=$size|" \
+  -e "s| -e omarchy-screensaver\$| -e $dir/tang-screensaver|" \
+  "$stock")
+
+# If a future Omarchy update changes the launcher so the swap no longer
+# applies, fall back to the stock screensaver rather than break.
+if ! grep -q "$dir/tang-screensaver" <<<"$launcher"; then
+  exec "$stock" "$@"
+fi
+
+exec bash <(printf '%s\n' "$launcher") "$@"

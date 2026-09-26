@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tang Poems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --title: rgb(175, 48, 41);
+    --author: rgb(111, 110, 105);
+    --verse: rgb(16, 15, 15);
+    --fade: 4s;
+  }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #fffcf0;
+    overflow: hidden;
+    cursor: none;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Brush-style 楷書 fonts that ship with Mac, Windows and Linux, then a web font. */
+    font-family: "BiauKaiTC", "BiauKai", "標楷體", "DFKai-SB", "Kaiti TC", "STKaiti",
+      "KaiTi", "AR PL UKai TW", "AR PL UKai HK", "LXGW WenKai TC", serif;
+  }
+  .poem {
+    display: flex;
+    flex-direction: row-reverse; /* columns read from right to left */
+    align-items: stretch;
+    gap: 0.9em;
+    opacity: 0;
+    transition: opacity var(--fade) ease-in-out;
+  }
+  .poem.shown { opacity: 1; }
+  .column {
+    writing-mode: vertical-rl; /* characters run top to bottom */
+    letter-spacing: 0.25em;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--verse);
+  }
+  .title { color: var(--title); }
+  /* The poet's name sits low, level with the end of the verses. */
+  .author { color: var(--author); text-align: end; }
+  .gap { width: 0.2em; }
+  .hint {
+    position: fixed;
+    bottom: 1.5rem;
+    width: 100%;
+    text-align: center;
+    color: rgb(183, 181, 172);
+    font: 14px system-ui, sans-serif;
+    transition: opacity 2s;
+  }
+</style>
+</head>
+<body>
+<div class="poem" id="poem"></div>
+<div class="hint" id="hint">Click to go full screen</div>
+<script>
+const POEMS = [["靜夜思", "李白", "床前明月光", "疑是地上霜", "舉頭望明月", "低頭思故鄉"], ["春曉", "孟浩然", "春眠不覺曉", "處處聞啼鳥", "夜來風雨聲", "花落知多少"], ["登鸛雀樓", "王之渙", "白日依山盡", "黃河入海流", "欲窮千里目", "更上一層樓"], ["相思", "王維", "紅豆生南國", "春來發幾枝", "願君多采擷", "此物最相思"], ["鹿柴", "王維", "空山不見人", "但聞人語響", "返景入深林", "復照青苔上"], ["竹里館", "王維", "獨坐幽篁裡", "彈琴復長嘯", "深林人不知", "明月來相照"], ["鳥鳴澗", "王維", "人閒桂花落", "夜靜春山空", "月出驚山鳥", "時鳴春澗中"], ["江雪", "柳宗元", "千山鳥飛絕", "萬徑人蹤滅", "孤舟蓑笠翁", "獨釣寒江雪"], ["登樂遊原", "李商隱", "向晚意不適", "驅車登古原", "夕陽無限好", "只是近黃昏"], ["憫農", "李紳", "鋤禾日當午", "汗滴禾下土", "誰知盤中飧", "粒粒皆辛苦"], ["宿建德江", "孟浩然", "移舟泊煙渚", "日暮客愁新", "野曠天低樹", "江清月近人"], ["獨坐敬亭山", "李白", "眾鳥高飛盡", "孤雲獨去閒", "相看兩不厭", "只有敬亭山"], ["問劉十九", "白居易", "綠螘新醅酒", "紅泥小火爐", "晚來天欲雪", "能飲一杯無"], ["尋隱者不遇", "賈島", "松下問童子", "言師採藥去", "只在此山中", "雲深不知處"], ["楓橋夜泊", "張繼", "月落烏啼霜滿天", "江楓漁火對愁眠", "姑蘇城外寒山寺", "夜半鐘聲到客船"], ["早發白帝城", "李白", "朝辭白帝彩雲間", "千里江陵一日還", "兩岸猿聲啼不住", "輕舟已過萬重山"], ["黃鶴樓送孟浩然之廣陵", "李白", "故人西辭黃鶴樓", "煙花三月下揚州", "孤帆遠影碧空盡", "唯見長江天際流"], ["望廬山瀑布", "李白", "日照香爐生紫煙", "遙看瀑布掛前川", "飛流直下三千尺", "疑是銀河落九天"], ["涼州詞", "王翰", "葡萄美酒夜光杯", "欲飲琵琶馬上催", "醉臥沙場君莫笑", "古來征戰幾人回"], ["出塞", "王昌齡", "秦時明月漢時關", "萬里長征人未還", "但使龍城飛將在", "不教胡馬度陰山"], ["芙蓉樓送辛漸", "王昌齡", "寒雨連江夜入吳", "平明送客楚山孤", "洛陽親友如相問", "一片冰心在玉壺"], ["九月九日憶山東兄弟", "王維", "獨在異鄉為異客", "每逢佳節倍思親", "遙知兄弟登高處", "遍插茱萸少一人"], ["送元二使安西", "王維", "渭城朝雨浥輕塵", "客舍青青柳色新", "勸君更盡一杯酒", "西出陽關無故人"], ["清明", "杜牧", "清明時節雨紛紛", "路上行人欲斷魂", "借問酒家何處有", "牧童遙指杏花村"], ["山行", "杜牧", "遠上寒山石徑斜", "白雲生處有人家", "停車坐愛楓林晚", "霜葉紅於二月花"], ["泊秦淮", "杜牧", "煙籠寒水月籠沙", "夜泊秦淮近酒家", "商女不知亡國恨", "隔江猶唱後庭花"], ["回鄉偶書", "賀知章", "少小離家老大回", "鄉音無改鬢毛衰", "兒童相見不相識", "笑問客從何處來"], ["絕句", "杜甫", "兩個黃鸝鳴翠柳", "一行白鷺上青天", "窗含西嶺千秋雪", "門泊東吳萬里船"], ["夜雨寄北", "李商隱", "君問歸期未有期", "巴山夜雨漲秋池", "何當共剪西窗燭", "卻話巴山夜雨時"], ["春望", "杜甫", "國破山河在", "城春草木深", "感時花濺淚", "恨別鳥驚心", "烽火連三月", "家書抵萬金", "白頭搔更短", "渾欲不勝簪"], ["春夜喜雨", "杜甫", "好雨知時節", "當春乃發生", "隨風潛入夜", "潤物細無聲", "野徑雲俱黑", "江船火獨明", "曉看紅濕處", "花重錦官城"], ["賦得古原草送別", "白居易", "離離原上草", "一歲一枯榮", "野火燒不盡", "春風吹又生", "遠芳侵古道", "晴翠接荒城", "又送王孫去", "萋萋滿別情"], ["遊子吟", "孟郊", "慈母手中線", "遊子身上衣", "臨行密密縫", "意恐遲遲歸", "誰言寸草心", "報得三春暉"], ["登高", "杜甫", "風急天高猿嘯哀", "渚清沙白鳥飛回", "無邊落木蕭蕭下", "不盡長江滾滾來", "萬里悲秋常作客", "百年多病獨登臺", "艱難苦恨繁霜鬢", "潦倒新停濁酒杯"], ["錦瑟", "李商隱", "錦瑟無端五十弦", "一弦一柱思華年", "莊生曉夢迷蝴蝶", "望帝春心託杜鵑", "滄海月明珠有淚", "藍田日暖玉生煙", "此情可待成追憶", "只是當時已惘然"]];
+const HOLD_SECONDS = 300;
+const FADE_MS = 4000;
+
+const poemEl = document.getElementById("poem");
+let previous = -1;
+
+function column(text, cls) {
+  const div = document.createElement("div");
+  div.className = "column " + (cls || "");
+  div.textContent = text;
+  return div;
+}
+
+function fit(poem) {
+  // Make the tallest column fill about 80% of the height, and keep the
+  // whole poem within 85% of the width.
+  const [title, author, ...lines] = poem;
+  const tallest = Math.max(title.length, author.length, ...lines.map(l => l.length));
+  const columns = lines.length + 3;
+  const byHeight = window.innerHeight * 0.8 / (tallest * 1.25);
+  const byWidth = window.innerWidth * 0.85 / (columns * 1.9);
+  poemEl.style.fontSize = Math.max(12, Math.min(byHeight, byWidth)) + "px";
+}
+
+function show(index) {
+  const [title, author, ...lines] = POEMS[index];
+  poemEl.replaceChildren(
+    column(title, "title"),
+    column(author, "author"),
+    Object.assign(document.createElement("div"), { className: "gap" }),
+    ...lines.map(l => column(l))
+  );
+  fit(POEMS[index]);
+  requestAnimationFrame(() => requestAnimationFrame(() => poemEl.classList.add("shown")));
+}
+
+function next() {
+  let index;
+  do { index = Math.floor(Math.random() * POEMS.length); } while (POEMS.length > 1 && index === previous);
+  previous = index;
+  show(index);
+  setTimeout(() => {
+    poemEl.classList.remove("shown");
+    setTimeout(next, FADE_MS);
+  }, HOLD_SECONDS * 1000 + FADE_MS);
+}
+
+window.addEventListener("resize", () => previous >= 0 && fit(POEMS[previous]));
+
+// In a browser, a click switches to full screen. Screensaver apps show the
+// page full screen already, so the hint fades away on its own.
+document.addEventListener("click", () => {
+  if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+});
+setTimeout(() => { document.getElementById("hint").style.opacity = 0; }, 6000);
+
+next();
+</script>
+</body>
+</html>
